@@ -1,33 +1,35 @@
 // db.ts
-import { MongoClient, Db, Collection } from 'mongodb';
+import { MongoClient, Db, Collection, Document } from 'mongodb';
 
 const MONGO_URI = process.env.MONGO_URI as string;
 if (!MONGO_URI) {
   throw new Error('Missing MONGO_URI in .env.local');
 }
 
-// optional: change this to whatever you want your database to be called
 const DB_NAME = process.env.MONGO_DB_NAME || 'cs391-url-shortener';
 
 let client: MongoClient;
-let db: Db;
+let database: Db;
 
 async function connectToDatabase(): Promise<Db> {
   if (!client) {
     client = new MongoClient(MONGO_URI);
     await client.connect();
-    db = client.db(DB_NAME);
+    database = client.db(DB_NAME);
     console.log(`✅ Connected to MongoDB: ${DB_NAME}`);
   }
-  return db;
+  return database;
 }
 
 /**
- * Utility to grab any collection by name
+ * Get a MongoDB collection by name.
+ *
+ * @param name - Collection name to retrieve
+ * @returns A Collection<T>
  */
-export async function getCollection<T = any>(
-  collectionName: string
+export async function getCollection<T extends Document>(
+  name: string
 ): Promise<Collection<T>> {
-  const database = await connectToDatabase();
-  return database.collection<T>(collectionName);
+  const db = await connectToDatabase();
+  return db.collection<T>(name);
 }
